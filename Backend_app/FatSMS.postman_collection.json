@@ -1,0 +1,178 @@
+{
+	"info": {
+		"_postman_id": "5af18c36-1635-4440-94a3-5162fe4bb103",
+		"name": "FatSMS",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "SignUp",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://fatsms.com/api-sign-up",
+					"protocol": "https",
+					"host": [
+						"fatsms",
+						"com"
+					],
+					"path": [
+						"api-sign-up"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "email",
+							"value": "asbjoern@garne.dk",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "123456",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://fatsms.com/api-log-in",
+					"protocol": "https",
+					"host": [
+						"fatsms",
+						"com"
+					],
+					"path": [
+						"api-log-in"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SendSMS",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://fatsms.com/send-sms",
+					"protocol": "https",
+					"host": [
+						"fatsms",
+						"com"
+					],
+					"path": [
+						"send-sms"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "https://fatsms.com/api-log-in",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://fatsms.com/api-log-in",
+					"protocol": "https",
+					"host": [
+						"fatsms",
+						"com"
+					],
+					"path": [
+						"api-log-in"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SignUp2",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "email",
+							"value": "Asbjoern@garne.dk",
+							"type": "text"
+						},
+						{
+							"key": "phone",
+							"value": "22323386",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "123456",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://fatsms.com/api-sign-up",
+					"protocol": "https",
+					"host": [
+						"fatsms",
+						"com"
+					],
+					"path": [
+						"api-sign-up"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SendSMS2",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "to_phone",
+							"value": "22323386",
+							"type": "text"
+						},
+						{
+							"key": "message",
+							"value": "Hello",
+							"type": "text"
+						},
+						{
+							"key": "api_key",
+							"value": "189c70a8-d6de-48c0-8553-97f03d8eaf89",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://fatsms.com/send-sms",
+					"protocol": "https",
+					"host": [
+						"fatsms",
+						"com"
+					],
+					"path": [
+						"send-sms"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
