@@ -1,10 +1,8 @@
 package main
 
 import (
-	"bytes"
-	"database/sql"
-	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
@@ -15,15 +13,11 @@ import (
 	"github.com/joho/godotenv"
 )
 
-type DBMessage struct {
-	ID        int    `json:"id"`
-	Message   string `json:"message"`
-	Topic     int    `json:"topic"`
-	CreatedAt string `json:"createdAt"`
-}
-
 type Message struct {
-	message string `json:"message"`
+	ID        int    `form:"id" json:"id" xml:"id" yaml:"id"`
+	Content   string `form:"content" json:"content" xml:"content" yaml:"content"`
+	Topic     string `form:"topic" json:"topic" xml:"topic" yaml:"topic"`
+	CreatedAt string `form:"createdAt" json:"createdAt" xml:"createdAt" yaml:"createdAt"`
 }
 
 func ping(c *gin.Context) {
@@ -48,7 +42,7 @@ func makeConnectionString() string {
 }
 
 func authenticate(token string) bool {
-	return token == "testToken"
+	return token == "testToken" // need some form of token validation
 }
 
 func getMessage(c *gin.Context) {
@@ -56,66 +50,62 @@ func getMessage(c *gin.Context) {
 	offset := c.Param("offset")
 	limit := c.Param("limit")
 	token := c.Param("token")
-	// format := c.Param("format")
+	format := c.Param("format")
 
 	if !authenticate(token) {
-		c.String(http.StatusUnauthorized, "Not authorized. Provide valid token.")
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Not authorized. Provide valid token."})
 		return
 	}
 
-	db, connectionError := sql.Open("mysql", makeConnectionString())
+	messages := getMessages(topic, offset, limit, c)
 
-	if connectionError != nil {
-		panic(connectionError.Error())
+	if len(messages) == 0 {
+		c.JSON(http.StatusNoContent, "")
+		return
 	}
 
-	defer db.Close()
+	transformMessages(format, c, messages)
+}
 
-	results, queryError := db.Query(
-		"SELECT * FROM message " +
-			"WHERE topic = " +
-			"(SELECT id FROM topic WHERE name = '" + topic + "') " +
-			"AND id > " + offset + " LIMIT " + limit,
-	)
-	if queryError != nil {
-		panic(queryError.Error())
+func transformMessages(format string, c *gin.Context, messages []Message) {
+	switch format {
+	case "JSON":
+		c.JSON(http.StatusOK, messages)
+	case "XML":
+		c.XML(http.StatusOK, messages)
+	case "YAML":
+		c.YAML(http.StatusOK, messages)
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Unsupported format (" + format + "). Please use JSON, XML or YAML."})
+	}
+}
+
+func createMessage(c *gin.Context) {
+	token := c.Param("token")
+
+	if !authenticate(token) {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Not authorized. Provide valid token."})
+		return
 	}
 
-	var messages []Message
+	message := Message{}
+	c.Bind(&message)
 
-	for results.Next() {
-		var message DBMessage
-
-		var scanningError = results.Scan(&message.ID, &message.Message, &message.Topic, &message.CreatedAt)
-		if scanningError != nil {
-			panic(scanningError.Error())
-		}
-
-		var messageData bytes.Buffer
-		jsonFormatError := json.Indent(&messageData, []byte(message.Message), "", "\t")
-		if jsonFormatError != nil {
-			panic(jsonFormatError.Error())
-		}
-
-		var returnMessage Message
-		returnMessage.message = messageData.String()
-
-		// fmt.Println(returnMessage)
-
-		messages = append(messages, returnMessage)
+	if message.Content == "" || message.Topic == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Provide both content and topic."})
+		return
 	}
 
-	fmt.Println(messages)
+	insertMessage(message, c)
 
-	c.IndentedJSON(http.StatusOK, messages)
+	c.JSON(http.StatusOK, gin.H{"message": "Message stored."})
 }
 
 func init() {
-
 	err := godotenv.Load(".env")
 
 	if err != nil {
-		panic("Error loading .env file")
+		log.Fatal("Error loading .env file")
 	}
 }
 
@@ -123,6 +113,7 @@ func main() {
 	router := gin.Default()
 	router.GET("/ping", ping)
 	router.GET("/read-messages/topic/:topic/from/:offset/limit/:limit/user-token/:token/format/:format", getMessage)
+	router.POST("/create-message/user-token/:token", createMessage)
 
-	router.Run("localhost:8080")
+	router.Run(":" + os.Getenv("PORT"))
 }
