@@ -75,8 +75,10 @@ func transformMessages(format string, c *gin.Context, messages []Message) {
 		c.XML(http.StatusOK, messages)
 	case "YAML":
 		c.YAML(http.StatusOK, messages)
+	case "TSV":
+		// TODO: implement tsv transformation
 	default:
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Unsupported format (" + format + "). Please use JSON, XML or YAML."})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Unsupported format (" + format + "). Please use JSON, XML, TSV or YAML."})
 	}
 }
 
