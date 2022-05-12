@@ -18,6 +18,7 @@ type Message struct {
 	Content   string `form:"content" json:"content" xml:"content" yaml:"content"`
 	Topic     string `form:"topic" json:"topic" xml:"topic" yaml:"topic"`
 	CreatedAt string `form:"createdAt" json:"createdAt" xml:"createdAt" yaml:"createdAt"`
+	Creator   int    `form:"creator" json:"creator" xml:"creator" yaml:"creator"`
 }
 
 type TokenInformation struct {
@@ -105,7 +106,7 @@ func createMessage(c *gin.Context) {
 		return
 	}
 
-	insertMessage(message, c)
+	insertMessage(message, token, c)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Message stored."})
 }

@@ -67,7 +67,7 @@ func getMessages(topic string, offset string, limit string, c *gin.Context) []Me
 	for results.Next() {
 		var message Message
 
-		var scanningError = results.Scan(&message.ID, &message.Content, &message.Topic, &message.CreatedAt)
+		var scanningError = results.Scan(&message.ID, &message.Content, &message.Topic, &message.CreatedAt, &message.Creator)
 		if scanningError != nil {
 			var errorMessage = "Error scanning results from database"
 			c.JSON(http.StatusInternalServerError, gin.H{"message": errorMessage})
@@ -80,12 +80,12 @@ func getMessages(topic string, offset string, limit string, c *gin.Context) []Me
 	return messages
 }
 
-func insertMessage(message Message, c *gin.Context) {
+func insertMessage(message Message, token string, c *gin.Context) {
 	db := getDatabaseConnection(c)
 	defer db.Close()
 
 	statement, statementCreationError := db.Prepare(
-		"INSERT INTO message (content, topic) VALUES (?, ?)",
+		"INSERT INTO message (content, topic, creator) VALUES (?, ?, (SELECT id FROM token WHERE token = ?))",
 	)
 	if statementCreationError != nil {
 		var errorMessage = "Error preparing database query"
@@ -93,7 +93,7 @@ func insertMessage(message Message, c *gin.Context) {
 		log.Fatal(errorMessage, statementCreationError.Error())
 	}
 
-	_, insertError := statement.Exec(message.Content, message.Topic)
+	_, insertError := statement.Exec(message.Content, message.Topic, token)
 	if insertError != nil {
 		var errorMessage = "Error inserting into database"
 		c.JSON(http.StatusInternalServerError, gin.H{"message": errorMessage})
