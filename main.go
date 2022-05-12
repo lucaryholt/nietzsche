@@ -20,6 +20,13 @@ type Message struct {
 	CreatedAt string `form:"createdAt" json:"createdAt" xml:"createdAt" yaml:"createdAt"`
 }
 
+type TokenInformation struct {
+	ID    int
+	Email string
+	Phone int
+	Token string
+}
+
 func ping(c *gin.Context) {
 	c.String(http.StatusOK, "pong")
 }
@@ -41,8 +48,8 @@ func makeConnectionString() string {
 	)
 }
 
-func authenticate(token string) bool {
-	return token == "testToken" // need some form of token validation
+func authenticate(inputToken string, c *gin.Context) bool {
+	return authenticateToken(inputToken, c)
 }
 
 func getMessage(c *gin.Context) {
@@ -52,7 +59,7 @@ func getMessage(c *gin.Context) {
 	token := c.Param("token")
 	format := c.Param("format")
 
-	if !authenticate(token) {
+	if !authenticate(token, c) {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "Not authorized. Provide valid token."})
 		return
 	}
@@ -85,7 +92,7 @@ func transformMessages(format string, c *gin.Context, messages []Message) {
 func createMessage(c *gin.Context) {
 	token := c.Param("token")
 
-	if !authenticate(token) {
+	if !authenticate(token, c) {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "Not authorized. Provide valid token."})
 		return
 	}

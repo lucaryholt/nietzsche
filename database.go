@@ -20,6 +20,26 @@ func getDatabaseConnection(c *gin.Context) *sql.DB {
 	return db
 }
 
+func authenticateToken(inputToken string, c *gin.Context) bool {
+	db := getDatabaseConnection(c)
+	defer db.Close()
+
+	statement := "SELECT * FROM token " +
+		"WHERE token = ?;"
+
+	var id int
+	var email string
+	var phone int
+	var token string
+
+	queryError := db.QueryRow(statement, inputToken).Scan(&id, &email, &phone, &token)
+	if queryError != nil {
+		return false
+	}
+
+	return true
+}
+
 func getMessages(topic string, offset string, limit string, c *gin.Context) []Message {
 	db := getDatabaseConnection(c)
 	defer db.Close()
