@@ -157,16 +157,26 @@ func createMessage(c *gin.Context) {
 }
 
 func receiveToken(c *gin.Context) {
-	apiKey := c.Request.Header["X-Api-Key"][0]
+	apiKey := c.Request.Header["X-Api-Key"]
 
-	if apiKey != os.Getenv("ADMIN_KEY") {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "Not authorized. Provide valid token."})
+	if len(apiKey) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "No admin key provided."})
+		return
+	}
+
+	if apiKey[0] != os.Getenv("ADMIN_KEY") {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Not authorized. Provide valid admin key."})
 		return
 	}
 
 	token := TokenInformation{}
 
 	c.Bind(&token)
+
+	if token.Email == "" || token.Phone == 0 || token.Token == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Provide email, phone and token."})
+		return
+	}
 
 	insertToken(token, c)
 
