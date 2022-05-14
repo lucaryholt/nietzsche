@@ -40,6 +40,25 @@ func authenticateToken(inputToken string, c *gin.Context) bool {
 	return true
 }
 
+func insertToken(token TokenInformation, c *gin.Context) {
+	db := getDatabaseConnection(c)
+	defer db.Close()
+
+	statement, statementCreationError := db.Prepare("INSERT INTO token (email, phone, token) VALUES (?, ?, ?)")
+	if statementCreationError != nil {
+		var errorMessage = "Error preparing database query"
+		c.JSON(http.StatusInternalServerError, gin.H{"message": errorMessage})
+		log.Fatal(errorMessage, statementCreationError.Error())
+	}
+
+	_, insertError := statement.Exec(token.Email, token.Phone, token.Token)
+	if insertError != nil {
+		var errorMessage = "Error inserting into database"
+		c.JSON(http.StatusInternalServerError, gin.H{"message": errorMessage})
+		log.Fatal(errorMessage, insertError.Error())
+	}
+}
+
 func getMessages(topic string, offset string, limit string, c *gin.Context) []Message {
 	db := getDatabaseConnection(c)
 	defer db.Close()

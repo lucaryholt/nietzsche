@@ -26,10 +26,10 @@ type Message struct {
 }
 
 type TokenInformation struct {
-	ID    int
-	Email string
-	Phone int
-	Token string
+	ID    int    `json:"id"`
+	Email string `json:"email"`
+	Phone int    `json:"phone"`
+	Token string `json:"token"`
 }
 
 func ping(c *gin.Context) {
@@ -156,6 +156,23 @@ func createMessage(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Message stored."})
 }
 
+func receiveToken(c *gin.Context) {
+	apiKey := c.Request.Header["X-Api-Key"][0]
+
+	if apiKey != os.Getenv("ADMIN_KEY") {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Not authorized. Provide valid token."})
+		return
+	}
+
+	token := TokenInformation{}
+
+	c.Bind(&token)
+
+	insertToken(token, c)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Token stored."})
+}
+
 func init() {
 	err := godotenv.Load(".env")
 
@@ -169,6 +186,7 @@ func main() {
 	router.GET("/ping", ping)
 	router.GET("/read-messages/topic/:topic/from/:offset/limit/:limit/user-token/:token/format/:format", getMessage)
 	router.POST("/create-message/user-token/:token/format/:format", createMessage)
+	router.POST("/token", receiveToken)
 
 	router.Run(":" + os.Getenv("PORT"))
 }
