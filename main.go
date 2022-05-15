@@ -12,6 +12,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	_ "github.com/go-sql-driver/mysql"
+
 	"github.com/joho/godotenv"
 )
 
@@ -39,6 +41,17 @@ func isSupportedFormat(format string) bool {
 
 	for _, supportedFormat := range formats {
 		if supportedFormat == format {
+			return true
+		}
+	}
+	return false
+}
+
+func isSupportedContentType(contentType string) bool {
+	contentTypes := [4]string{"text/plain", "application/json", "application/xml", "application/x-yaml"}
+
+	for _, supportedContentType := range contentTypes {
+		if supportedContentType == contentType {
 			return true
 		}
 	}
@@ -115,21 +128,29 @@ func transformMessages(format string, c *gin.Context, messages []Message) {
 
 func createMessage(c *gin.Context) {
 	token := c.Param("token")
-	format := c.Param("format")
+	// format := c.Param("format")
+	contentTypeHeader := c.Request.Header["Content-Type"]
 
 	if !authenticate(token, c) {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "Not authorized. Provide valid token."})
 		return
 	}
 
-	if !isSupportedFormat(format) {
+	if len(contentTypeHeader) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "No content type provided."})
+		return
+	}
+
+	contentType := contentTypeHeader[0]
+
+	if !isSupportedContentType(contentType) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Not a supported format"})
 		return
 	}
 
 	message := Message{}
 
-	if format == "TSV" {
+	if contentType == "text/plain" {
 		data, err := ioutil.ReadAll(c.Request.Body)
 		if err != nil {
 			log.Fatal(err.Error())
@@ -193,7 +214,7 @@ func main() {
 	router := gin.Default()
 	router.GET("/ping", ping)
 	router.GET("/read-messages/topic/:topic/from/:offset/limit/:limit/user-token/:token/format/:format", getMessage)
-	router.POST("/create-message/user-token/:token/format/:format", createMessage)
+	router.POST("/create-message/user-token/:token", createMessage)
 	router.POST("/token", receiveToken)
 
 	router.Run(":" + os.Getenv("PORT"))
