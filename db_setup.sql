@@ -1,3 +1,7 @@
+create database if not exists nietzsche;
+
+use nietzsche;
+
 create table if not exists token
 (
     id    int auto_increment
