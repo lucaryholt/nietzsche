@@ -117,10 +117,10 @@ func transformMessages(format string, c *gin.Context, messages []Message) {
 	case "TSV":
 		var returnMessages bytes.Buffer
 
-		returnMessages.WriteString("id,content,topic,createdAt,creator\n")
+		returnMessages.WriteString("id\tcontent\ttopic\tcreatedAt\tcreator\n")
 
 		for _, message := range messages {
-			returnMessages.WriteString(strconv.Itoa(message.ID) + "," + message.Content + "," + message.Topic + "," + message.CreatedAt + "," + strconv.Itoa(message.Creator) + "\n")
+			returnMessages.WriteString(strconv.Itoa(message.ID) + "\t" + message.Content + "\t" + message.Topic + "\t" + message.CreatedAt + "\t" + strconv.Itoa(message.Creator) + "\n")
 		}
 		c.String(http.StatusOK, returnMessages.String())
 	}
@@ -157,7 +157,7 @@ func createMessage(c *gin.Context) {
 		}
 
 		lines := strings.Split(string(data), "\n")
-		messageData := strings.Split(lines[1], ",")
+		messageData := strings.Split(lines[1], "\t")
 
 		message.Content = messageData[0]
 		message.Topic = messageData[1]
