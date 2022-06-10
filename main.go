@@ -185,7 +185,7 @@ func createMessage(c *gin.Context) {
 		updateMessage(message, token, c)
 	} else {
 		id := insertMessage(message, token, c)
-		c.JSON(http.StatusOK, gin.H{ "id": id, "message": "Message stored."})
+		c.JSON(http.StatusOK, gin.H{"id": id, "message": "Message stored."})
 	}
 
 }
@@ -229,8 +229,8 @@ func main() {
 	router := gin.Default()
 	router.GET("/ping", ping)
 	router.GET("/read-messages/topic/:topic/from/:offset/limit/:limit/user-token/:token/format/:format", getMessage)
-	router.POST("/create-message/user-token/:token", createMessage)
 	router.PUT("/update-message/user-token/:token", createMessage)
+	router.POST("/create-message/user-token/:token", createMessage)
 	router.POST("/token", receiveToken)
 	router.Run(":" + os.Getenv("PORT"))
 }

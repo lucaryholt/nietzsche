@@ -120,12 +120,12 @@ func insertMessage(message Message, token string, c *gin.Context) int64 {
 	}
 
 	messageID, err := result.LastInsertId()
-    if err != nil {
-        var errorMessage = "Error fetching created message id"
+	if err != nil {
+		var errorMessage = "Error fetching created message id"
 		c.JSON(http.StatusInternalServerError, gin.H{"message": errorMessage})
 		log.Fatal(errorMessage, insertError.Error())
-    }
-	
+	}
+
 	return messageID
 }
 
