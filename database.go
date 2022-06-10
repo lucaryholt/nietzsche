@@ -99,7 +99,7 @@ func getMessages(topic string, offset string, limit string, c *gin.Context) []Me
 	return messages
 }
 
-func insertMessage(message Message, token string, c *gin.Context) {
+func insertMessage(message Message, token string, c *gin.Context) int64 {
 	db := getDatabaseConnection(c)
 	defer db.Close()
 
@@ -112,10 +112,42 @@ func insertMessage(message Message, token string, c *gin.Context) {
 		log.Fatal(errorMessage, statementCreationError.Error())
 	}
 
-	_, insertError := statement.Exec(message.Content, message.Topic, token)
+	result, insertError := statement.Exec(message.Content, message.Topic, token)
 	if insertError != nil {
 		var errorMessage = "Error inserting into database"
 		c.JSON(http.StatusInternalServerError, gin.H{"message": errorMessage})
 		log.Fatal(errorMessage, insertError.Error())
+	}
+
+	messageID, err := result.LastInsertId()
+    if err != nil {
+        var errorMessage = "Error fetching created message id"
+		c.JSON(http.StatusInternalServerError, gin.H{"message": errorMessage})
+		log.Fatal(errorMessage, insertError.Error())
+    }
+	
+	return messageID
+}
+
+func updateMessage(message Message, token string, c *gin.Context) {
+	db := getDatabaseConnection(c)
+	defer db.Close()
+
+	statement, statementUpdateError := db.Prepare(
+		"UPDATE message SET content=?, topic=? WHERE id = ? AND creator = (SELECT id FROM token WHERE token = ?)",
+	)
+
+	if statementUpdateError != nil {
+		var errorMessage = "Error preparing database query"
+		c.JSON(http.StatusInternalServerError, gin.H{"message": errorMessage})
+		log.Fatal(errorMessage, statementUpdateError.Error())
+	}
+
+	_, error := statement.Exec(message.Content, message.Topic, message.ID, token)
+
+	if error != nil {
+		var errorMessage = "Error updating message"
+		c.JSON(http.StatusInternalServerError, gin.H{"message": errorMessage})
+		log.Fatal(errorMessage, error.Error())
 	}
 }

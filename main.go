@@ -158,9 +158,16 @@ func createMessage(c *gin.Context) {
 
 		lines := strings.Split(string(data), "\n")
 		messageData := strings.Split(lines[1], "\t")
-
-		message.Content = messageData[0]
-		message.Topic = messageData[1]
+		if c.Request.Method == "PUT" {
+			if i, err := strconv.Atoi(messageData[0]); err == nil {
+				message.ID = i
+			}
+			message.Content = messageData[1]
+			message.Topic = messageData[2]
+		} else {
+			message.Content = messageData[0]
+			message.Topic = messageData[1]
+		}
 	} else {
 		c.Bind(&message)
 
@@ -170,9 +177,17 @@ func createMessage(c *gin.Context) {
 		}
 	}
 
-	insertMessage(message, token, c)
+	if c.Request.Method == "PUT" {
+		if message.ID <= 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "You must provide an message ID"})
+			return
+		}
+		updateMessage(message, token, c)
+	} else {
+		id := insertMessage(message, token, c)
+		c.JSON(http.StatusOK, gin.H{ "id": id, "message": "Message stored."})
+	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Message stored."})
 }
 
 func receiveToken(c *gin.Context) {
@@ -215,7 +230,7 @@ func main() {
 	router.GET("/ping", ping)
 	router.GET("/read-messages/topic/:topic/from/:offset/limit/:limit/user-token/:token/format/:format", getMessage)
 	router.POST("/create-message/user-token/:token", createMessage)
+	router.PUT("/update-message/user-token/:token", createMessage)
 	router.POST("/token", receiveToken)
-
 	router.Run(":" + os.Getenv("PORT"))
 }
